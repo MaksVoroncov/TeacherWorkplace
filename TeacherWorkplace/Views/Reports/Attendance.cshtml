@@ -1,0 +1,272 @@
+@{
+    ViewData["Title"] = "Отчёт по посещаемости";
+    var attendanceData = ViewBag.AttendanceData as dynamic;
+    bool hasData = attendanceData != null && (attendanceData is System.Collections.IEnumerable ae && ae.Cast<object>().Any());
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-calendar-check me-2 text-success"></i>Отчёт по посещаемости</h2>
+    <div class="d-flex gap-2 align-items-center">
+        @if (hasData)
+        {
+            <button onclick="exportToExcel('attTable','Посещаемость')" class="btn btn-success btn-sm">
+                <i class="fas fa-file-excel me-1"></i> Excel
+            </button>
+            <button onclick="exportToPdf('attTable','Отчёт по посещаемости')" class="btn btn-danger btn-sm">
+                <i class="fas fa-file-pdf me-1"></i> PDF
+            </button>
+        }
+        <a asp-action="Index" class="btn btn-outline-secondary btn-sm">
+            <i class="fas fa-arrow-left me-1"></i> К отчётам
+        </a>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header"><i class="fas fa-filter me-2"></i> Параметры отчёта</div>
+    <div class="card-body">
+        <form method="get" asp-action="Attendance" class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label fw-semibold">Дата начала</label>
+                <input type="date" name="startDate" class="form-control"
+                       value="@(((DateTime)ViewBag.StartDate).ToString("yyyy-MM-dd"))" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-semibold">Дата окончания</label>
+                <input type="date" name="endDate" class="form-control"
+                       value="@(((DateTime)ViewBag.EndDate).ToString("yyyy-MM-dd"))" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-semibold">Группа (необязательно)</label>
+                <select name="groupId" class="form-select">
+                    <option value="">— Все группы —</option>
+                    @foreach (SelectListItem item in (IEnumerable<SelectListItem>)ViewBag.Groups)
+                    {
+                        <option value="@item.Value" selected="@item.Selected">@item.Text</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-success w-100">
+                    <i class="fas fa-search me-1"></i> Сформировать
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@if (!hasData)
+{
+    <div class="text-center py-5 text-muted">
+        <i class="fas fa-calendar fa-4x mb-3 d-block opacity-25"></i>
+        <h5>Данных за выбранный период нет</h5>
+        <p>Попробуйте расширить диапазон дат или выбрать другую группу</p>
+    </div>
+}
+else
+{
+    <div class="row g-3 mb-4">
+        <div class="col-md-2">
+            <div class="card border-start border-primary border-4 shadow-sm">
+                <div class="card-body py-3">
+                    <div class="text-muted small">Всего записей</div>
+                    <div class="fs-2 fw-bold text-primary">@ViewBag.TotalRecords</div>
+                    <i class="fas fa-list fa-lg text-primary opacity-50"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card border-start border-success border-4 shadow-sm">
+                <div class="card-body py-3">
+                    <div class="text-muted small">Присутствовали</div>
+                    <div class="fs-2 fw-bold text-success">@ViewBag.TotalPresent</div>
+                    <i class="fas fa-check-circle fa-lg text-success opacity-50"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card border-start border-danger border-4 shadow-sm">
+                <div class="card-body py-3">
+                    <div class="text-muted small">Отсутствовали</div>
+                    <div class="fs-2 fw-bold text-danger">@ViewBag.TotalAbsent</div>
+                    <i class="fas fa-times-circle fa-lg text-danger opacity-50"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card border-start border-warning border-4 shadow-sm">
+                <div class="card-body py-3">
+                    <div class="text-muted small">Опоздали</div>
+                    <div class="fs-2 fw-bold text-warning">@ViewBag.TotalLate</div>
+                    <i class="fas fa-clock fa-lg text-warning opacity-50"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card border-start border-info border-4 shadow-sm">
+                <div class="card-body py-3">
+                    <div class="text-muted small">Уваж. причина</div>
+                    <div class="fs-2 fw-bold text-info">@ViewBag.TotalExcused</div>
+                    <i class="fas fa-file-alt fa-lg text-info opacity-50"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card border-start border-dark border-4 shadow-sm">
+                <div class="card-body py-3">
+                    <div class="text-muted small">Средн. посещ.</div>
+                    <div class="fs-2 fw-bold">@ViewBag.AvgAttendance<small class="fs-6">%</small></div>
+                    <i class="fas fa-percentage fa-lg opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span>
+                <i class="fas fa-table me-2"></i>
+                Детальная посещаемость за
+                @(((DateTime)ViewBag.StartDate).ToString("dd.MM.yyyy")) —
+                @(((DateTime)ViewBag.EndDate).ToString("dd.MM.yyyy"))
+            </span>
+            <div class="d-flex gap-2">
+                <button onclick="exportToExcel('attTable','Посещаемость_@(((DateTime)ViewBag.StartDate).ToString("dd.MM.yyyy"))')" class="btn btn-success btn-sm">
+                    <i class="fas fa-file-excel me-1"></i> Экспорт Excel
+                </button>
+                <button onclick="exportToPdf('attTable','Отчёт по посещаемости @(((DateTime)ViewBag.StartDate).ToString("dd.MM.yyyy")) - @(((DateTime)ViewBag.EndDate).ToString("dd.MM.yyyy"))')" class="btn btn-danger btn-sm">
+                    <i class="fas fa-file-pdf me-1"></i> Экспорт PDF
+                </button>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table id="attTable" class="table table-hover mb-0 align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>№</th><th>Студент</th><th>Группа</th>
+                            <th class="text-center">Всего</th>
+                            <th class="text-center">Присут.</th>
+                            <th class="text-center">Отсутст.</th>
+                            <th class="text-center">Опоздал</th>
+                            <th class="text-center">Уваж.</th>
+                            <th class="text-center">% посещ.</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{ int rowNum = 1; }
+                        @foreach (var item in attendanceData)
+                        {
+                            double rate = (double)item.AttendanceRate;
+                            string rateClass = rate >= 80 ? "text-success fw-bold" : rate >= 60 ? "text-warning fw-bold" : "text-danger fw-bold";
+                            <tr>
+                                <td>@rowNum</td>
+                                <td class="fw-semibold">@item.Student.FullName</td>
+                                <td><span class="badge bg-secondary">@item.Student.Group?.Name</span></td>
+                                <td class="text-center">@item.Total</td>
+                                <td class="text-center text-success fw-bold">@item.Present</td>
+                                <td class="text-center text-danger fw-bold">@item.Absent</td>
+                                <td class="text-center text-warning fw-bold">@item.Late</td>
+                                <td class="text-center text-info fw-bold">@item.Excused</td>
+                                <td class="text-center">
+                                    <span class="@rateClass">@rate%</span>
+                                    <div class="progress mt-1" style="height:4px;width:80px;margin:0 auto;">
+                                        <div class="progress-bar @(rate>=80?"bg-success":rate>=60?"bg-warning":"bg-danger")"
+                                             style="width:@rate%"></div>
+                                    </div>
+                                </td>
+                            </tr>
+                            rowNum++;
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <script>
+    // ── Экспорт в Excel ───────────────────────────────────────────────────────
+    function exportToExcel(tableId, fileName) {
+        var table = document.getElementById(tableId);
+        if (!table) { alert('Нет данных для экспорта'); return; }
+        var data = [];
+        table.querySelectorAll('tr').forEach(function(row) {
+            var rowData = [];
+            row.querySelectorAll('th, td').forEach(function(cell) {
+                rowData.push(cell.innerText.trim());
+            });
+            data.push(rowData);
+        });
+        var wb = XLSX.utils.book_new();
+        var ws = XLSX.utils.aoa_to_sheet(data);
+        ws['!cols'] = [
+            {wch:4},{wch:32},{wch:12},{wch:10},
+            {wch:8},{wch:8},{wch:10},{wch:10},{wch:12}
+        ];
+        XLSX.utils.book_append_sheet(wb, ws, 'Отчёт');
+        XLSX.writeFile(wb, (fileName || 'Отчёт').replace(/[\\/:"*?<>|]/g,'_') + '.xlsx');
+    }
+
+    // ── Экспорт в PDF через html2pdf ─────────────────────────────────────────
+    // html2pdf рендерит HTML через canvas — кириллица отображается корректно
+    function exportToPdf(tableId, title) {
+        var table = document.getElementById(tableId);
+        if (!table) { alert('Нет данных для экспорта'); return; }
+
+        // Создаём временный контейнер со стилями для печати
+        var container = document.createElement('div');
+        container.style.cssText = 'padding:16px;font-family:Arial,sans-serif;font-size:11px;color:#000;background:#fff;';
+
+        // Заголовок
+        var h = document.createElement('div');
+        h.style.cssText = 'text-align:center;margin-bottom:12px;';
+        h.innerHTML =
+            '<div style="font-size:16px;font-weight:bold;margin-bottom:4px;">' + title + '</div>' +
+            '<div style="font-size:11px;color:#555;">Дата формирования: ' +
+            new Date().toLocaleDateString('ru-RU', {day:'2-digit',month:'2-digit',year:'numeric'}) +
+            ' | АРМ Преподавателя — Колледж СКФУ</div>';
+        container.appendChild(h);
+
+        // Клонируем таблицу и применяем чистые стили
+        var tbl = table.cloneNode(true);
+        tbl.style.cssText = 'width:100%;border-collapse:collapse;font-size:10px;';
+        tbl.querySelectorAll('th').forEach(function(th) {
+            th.style.cssText = 'background:#667eea;color:#fff;padding:6px 8px;text-align:left;border:1px solid #5a6fd6;font-weight:bold;';
+        });
+        tbl.querySelectorAll('td').forEach(function(td) {
+            td.style.cssText = 'padding:5px 8px;border:1px solid #dee2e6;color:#000;background:#fff;';
+        });
+        // Чередующиеся строки
+        tbl.querySelectorAll('tbody tr:nth-child(even) td').forEach(function(td) {
+            td.style.backgroundColor = '#f8f9ff';
+        });
+        // Убираем progress-bar и badge цвета — оставляем только текст
+        tbl.querySelectorAll('.progress, .badge').forEach(function(el) {
+            var txt = document.createTextNode(el.innerText);
+            el.parentNode.replaceChild(txt, el);
+        });
+        container.appendChild(tbl);
+
+        document.body.appendChild(container);
+
+        var opt = {
+            margin:       [10, 8, 10, 8],
+            filename:     (title || 'Отчёт').replace(/[\\/:"*?<>|]/g,'_') + '.pdf',
+            image:        { type: 'jpeg', quality: 0.97 },
+            html2canvas:  { scale: 2, useCORS: true, letterRendering: true },
+            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' },
+            pagebreak:    { mode: ['avoid-all','css','legacy'] }
+        };
+
+        html2pdf().set(opt).from(container).save().then(function() {
+            document.body.removeChild(container);
+        });
+    }
+    </script>
+
+}

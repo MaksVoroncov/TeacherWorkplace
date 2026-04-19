@@ -1,0 +1,265 @@
+@{
+    ViewData["Title"] = "Отчёт по успеваемости";
+    var studentStats = ViewBag.StudentStats as dynamic;
+    bool hasData = studentStats != null;
+
+    int totalStudents = 0;
+    double avgAll     = 0;
+    int excellent     = 0;
+    int bad           = 0;
+
+    if (hasData)
+    {
+        foreach (var s in studentStats)
+        {
+            totalStudents++;
+            avgAll += (double)s.AverageGrade;
+            if ((double)s.AverageGrade >= 4.5) excellent++;
+            if ((double)s.AverageGrade > 0 && (double)s.AverageGrade < 3.0) bad++;
+        }
+        avgAll = totalStudents > 0 ? Math.Round(avgAll / totalStudents, 2) : 0;
+    }
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-chart-line me-2 text-primary"></i>Отчёт по успеваемости</h2>
+    <div class="d-flex gap-2 align-items-center">
+        @if (hasData)
+        {
+            <button onclick="exportToExcel('perfTable','Успеваемость')" class="btn btn-success btn-sm">
+                <i class="fas fa-file-excel me-1"></i> Excel
+            </button>
+            <button onclick="exportToPdf('perfTable','Отчёт по успеваемости — группа @ViewBag.GroupName')" class="btn btn-danger btn-sm">
+                <i class="fas fa-file-pdf me-1"></i> PDF
+            </button>
+        }
+        <a asp-action="Index" class="btn btn-outline-secondary btn-sm">
+            <i class="fas fa-arrow-left me-1"></i> К отчётам
+        </a>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header"><i class="fas fa-filter me-2"></i> Параметры отчёта</div>
+    <div class="card-body">
+        <form method="get" asp-action="Performance" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label fw-semibold">Учебная группа <span class="text-danger">*</span></label>
+                <select name="groupId" class="form-select" required>
+                    <option value="">— Выберите группу —</option>
+                    @foreach (SelectListItem item in (IEnumerable<SelectListItem>)ViewBag.Groups)
+                    {
+                        <option value="@item.Value" selected="@item.Selected">@item.Text</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-semibold">Дисциплина (необязательно)</label>
+                <select name="subjectId" class="form-select">
+                    <option value="">— Все дисциплины —</option>
+                    @foreach (SelectListItem item in (IEnumerable<SelectListItem>)ViewBag.Subjects)
+                    {
+                        <option value="@item.Value" selected="@item.Selected">@item.Text</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-4">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-search me-1"></i> Сформировать
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@if (!hasData)
+{
+    <div class="text-center py-5 text-muted">
+        <i class="fas fa-chart-bar fa-4x mb-3 d-block opacity-25"></i>
+        <h5>Выберите группу и нажмите «Сформировать»</h5>
+    </div>
+}
+else
+{
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card border-start border-primary border-4 shadow-sm">
+                <div class="card-body py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div><div class="text-muted small">Студентов в группе</div><div class="fs-2 fw-bold text-primary">@totalStudents</div></div>
+                        <i class="fas fa-users fa-2x text-primary opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-start border-warning border-4 shadow-sm">
+                <div class="card-body py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div><div class="text-muted small">Средний балл</div><div class="fs-2 fw-bold text-warning">@avgAll</div></div>
+                        <i class="fas fa-star fa-2x text-warning opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-start border-success border-4 shadow-sm">
+                <div class="card-body py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div><div class="text-muted small">Отличников (&gt;= 4.5)</div><div class="fs-2 fw-bold text-success">@excellent</div></div>
+                        <i class="fas fa-trophy fa-2x text-success opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-start border-danger border-4 shadow-sm">
+                <div class="card-body py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div><div class="text-muted small">Неуспевающих (&lt; 3)</div><div class="fs-2 fw-bold text-danger">@bad</div></div>
+                        <i class="fas fa-exclamation-circle fa-2x text-danger opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header"><i class="fas fa-chart-bar me-2"></i>Средний балл — группа @ViewBag.GroupName</div>
+        <div class="card-body"><canvas id="performanceChart" height="80"></canvas></div>
+    </div>
+
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span><i class="fas fa-table me-2"></i>Детальная успеваемость — @totalStudents студентов</span>
+            <div class="d-flex gap-2">
+                <button onclick="exportToExcel('perfTable','Успеваемость_@ViewBag.GroupName')" class="btn btn-success btn-sm">
+                    <i class="fas fa-file-excel me-1"></i> Экспорт Excel
+                </button>
+                <button onclick="exportToPdf('perfTable','Отчёт по успеваемости — группа @ViewBag.GroupName')" class="btn btn-danger btn-sm">
+                    <i class="fas fa-file-pdf me-1"></i> Экспорт PDF
+                </button>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table id="perfTable" class="table table-hover mb-0 align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>№</th><th>Студент</th><th>Средний балл</th>
+                            <th>Всего оценок</th><th>Отл. (5)</th><th>Хор. (4)</th>
+                            <th>Удовл. (3)</th><th>Неуд. (&lt;=2)</th><th>Уровень</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{ int rowNum = 1; }
+                        @foreach (var item in studentStats)
+                        {
+                            double avg = (double)item.AverageGrade;
+                            string levelClass = avg >= 4.5 ? "bg-success" : avg >= 3.5 ? "bg-primary" : avg >= 2.5 ? "bg-warning text-dark" : "bg-danger";
+                            string levelText  = avg >= 4.5 ? "Отлично" : avg >= 3.5 ? "Хорошо" : avg >= 2.5 ? "Удовл." : avg > 0 ? "Неуд." : "—";
+                            <tr>
+                                <td>@rowNum</td>
+                                <td class="fw-semibold">@item.Student.FullName</td>
+                                <td class="text-center"><span class="badge @levelClass fs-6">@(avg > 0 ? avg.ToString("F2") : "—")</span></td>
+                                <td class="text-center">@item.TotalGrades</td>
+                                <td class="text-center text-success fw-bold">@item.ExcellentCount</td>
+                                <td class="text-center text-primary fw-bold">@item.GoodCount</td>
+                                <td class="text-center text-warning fw-bold">@item.SatisfCount</td>
+                                <td class="text-center text-danger fw-bold">@item.BadCount</td>
+                                <td class="text-center"><span class="badge @levelClass">@levelText</span></td>
+                            </tr>
+                            rowNum++;
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <script>
+    // ── Экспорт в Excel ───────────────────────────────────────────────────────
+    function exportToExcel(tableId, fileName) {
+        var table = document.getElementById(tableId);
+        if (!table) { alert('Нет данных для экспорта'); return; }
+        var data = [];
+        table.querySelectorAll('tr').forEach(function(row) {
+            var rowData = [];
+            row.querySelectorAll('th, td').forEach(function(cell) {
+                rowData.push(cell.innerText.trim());
+            });
+            data.push(rowData);
+        });
+        var wb = XLSX.utils.book_new();
+        var ws = XLSX.utils.aoa_to_sheet(data);
+        ws['!cols'] = [
+            {wch:4},{wch:32},{wch:12},{wch:10},
+            {wch:8},{wch:8},{wch:10},{wch:10},{wch:12}
+        ];
+        XLSX.utils.book_append_sheet(wb, ws, 'Отчёт');
+        XLSX.writeFile(wb, (fileName || 'Отчёт').replace(/[\\/:"*?<>|]/g,'_') + '.xlsx');
+    }
+
+    // ── Экспорт в PDF через html2pdf ─────────────────────────────────────────
+    // html2pdf рендерит HTML через canvas — кириллица отображается корректно
+    function exportToPdf(tableId, title) {
+        var table = document.getElementById(tableId);
+        if (!table) { alert('Нет данных для экспорта'); return; }
+
+        // Создаём временный контейнер со стилями для печати
+        var container = document.createElement('div');
+        container.style.cssText = 'padding:16px;font-family:Arial,sans-serif;font-size:11px;color:#000;background:#fff;';
+
+        // Заголовок
+        var h = document.createElement('div');
+        h.style.cssText = 'text-align:center;margin-bottom:12px;';
+        h.innerHTML =
+            '<div style="font-size:16px;font-weight:bold;margin-bottom:4px;">' + title + '</div>' +
+            '<div style="font-size:11px;color:#555;">Дата формирования: ' +
+            new Date().toLocaleDateString('ru-RU', {day:'2-digit',month:'2-digit',year:'numeric'}) +
+            ' | АРМ Преподавателя — Колледж СКФУ</div>';
+        container.appendChild(h);
+
+        // Клонируем таблицу и применяем чистые стили
+        var tbl = table.cloneNode(true);
+        tbl.style.cssText = 'width:100%;border-collapse:collapse;font-size:10px;';
+        tbl.querySelectorAll('th').forEach(function(th) {
+            th.style.cssText = 'background:#667eea;color:#fff;padding:6px 8px;text-align:left;border:1px solid #5a6fd6;font-weight:bold;';
+        });
+        tbl.querySelectorAll('td').forEach(function(td) {
+            td.style.cssText = 'padding:5px 8px;border:1px solid #dee2e6;color:#000;background:#fff;';
+        });
+        // Чередующиеся строки
+        tbl.querySelectorAll('tbody tr:nth-child(even) td').forEach(function(td) {
+            td.style.backgroundColor = '#f8f9ff';
+        });
+        // Убираем progress-bar и badge цвета — оставляем только текст
+        tbl.querySelectorAll('.progress, .badge').forEach(function(el) {
+            var txt = document.createTextNode(el.innerText);
+            el.parentNode.replaceChild(txt, el);
+        });
+        container.appendChild(tbl);
+
+        document.body.appendChild(container);
+
+        var opt = {
+            margin:       [10, 8, 10, 8],
+            filename:     (title || 'Отчёт').replace(/[\\/:"*?<>|]/g,'_') + '.pdf',
+            image:        { type: 'jpeg', quality: 0.97 },
+            html2canvas:  { scale: 2, useCORS: true, letterRendering: true },
+            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' },
+            pagebreak:    { mode: ['avoid-all','css','legacy'] }
+        };
+
+        html2pdf().set(opt).from(container).save().then(function() {
+            document.body.removeChild(container);
+        });
+    }
+    </script>
+
+}

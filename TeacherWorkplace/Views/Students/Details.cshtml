@@ -1,0 +1,75 @@
+@model TeacherWorkplace.Models.Student
+@{ ViewData["Title"] = "Карточка студента"; }
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-user me-2 text-primary"></i>@Model.FullName</h2>
+    <div>
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning me-2"><i class="fas fa-edit me-1"></i>Редактировать</a>
+        <a asp-action="Index" class="btn btn-outline-secondary"><i class="fas fa-arrow-left me-1"></i>Назад</a>
+    </div>
+</div>
+<div class="row g-4">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header"><i class="fas fa-id-card me-2"></i>Личные данные</div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-5">Фамилия</dt><dd class="col-7">@Model.LastName</dd>
+                    <dt class="col-5">Имя</dt><dd class="col-7">@Model.FirstName</dd>
+                    <dt class="col-5">Отчество</dt><dd class="col-7">@(Model.MiddleName ?? "—")</dd>
+                    <dt class="col-5">Дата рождения</dt><dd class="col-7">@Model.BirthDate.ToString("dd.MM.yyyy")</dd>
+                    <dt class="col-5">Возраст</dt><dd class="col-7">@Model.Age лет</dd>
+                    <dt class="col-5">Группа</dt><dd class="col-7"><span class="badge bg-primary">@Model.Group?.Name</span></dd>
+                    <dt class="col-5">Телефон</dt><dd class="col-7">@(Model.Phone ?? "—")</dd>
+                    <dt class="col-5">Email</dt><dd class="col-7">@(Model.Email ?? "—")</dd>
+                    <dt class="col-5">Зачислен</dt><dd class="col-7">@Model.EnrollmentDate.ToString("dd.MM.yyyy")</dd>
+                </dl>
+            </div>
+        </div>
+        <div class="row g-3 mt-1">
+            <div class="col-6">
+                <div class="card border-start border-warning border-4">
+                    <div class="card-body py-2">
+                        <div class="text-muted small">Средний балл</div>
+                        <div class="fs-3 fw-bold text-warning">@ViewBag.AverageGrade</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="card border-start border-success border-4">
+                    <div class="card-body py-2">
+                        <div class="text-muted small">Посещаемость</div>
+                        <div class="fs-3 fw-bold text-success">@ViewBag.AttendanceRate%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="card mb-3">
+            <div class="card-header"><i class="fas fa-star me-2"></i>Последние оценки</div>
+            <div class="card-body p-0">
+                @if (!Model.Grades.Any())
+                {
+                    <p class="text-muted text-center py-3">Оценок нет</p>
+                }
+                else
+                {
+                    <table class="table table-sm mb-0">
+                        <thead class="table-light"><tr><th>Дисциплина</th><th>Оценка</th><th>Тип</th><th>Дата</th></tr></thead>
+                        <tbody>
+                            @foreach (var g in Model.Grades.OrderByDescending(x => x.Date).Take(10))
+                            {
+                                <tr>
+                                    <td>@g.Subject?.Name</td>
+                                    <td><span class="badge @(g.Score == 5 ? "bg-success" : g.Score == 4 ? "bg-primary" : g.Score == 3 ? "bg-warning text-dark" : "bg-danger")">@g.Score</span></td>
+                                    <td>@g.Type</td>
+                                    <td>@g.Date.ToString("dd.MM.yy")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+    </div>
+</div>

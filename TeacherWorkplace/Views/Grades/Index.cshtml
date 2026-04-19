@@ -1,0 +1,76 @@
+@model IEnumerable<TeacherWorkplace.Models.Grade>
+@{ ViewData["Title"] = "Журнал оценок"; }
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-star me-2 text-warning"></i>Журнал оценок</h2>
+    <a asp-action="Create" class="btn btn-primary"><i class="fas fa-plus me-1"></i>Выставить оценку</a>
+</div>
+<div class="card mb-3">
+    <div class="card-body">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-md-5">
+                <label class="form-label fw-semibold">Студент</label>
+                <select name="studentId" class="form-select">
+                    <option value="">— Все студенты —</option>
+                    @foreach (var s in (List<TeacherWorkplace.Models.Student>)ViewBag.Students)
+                    {
+                        <option value="@s.Id" selected="@(Context.Request.Query["studentId"] == s.Id.ToString())">@s.FullName</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-semibold">Дисциплина</label>
+                <select name="subjectId" class="form-select">
+                    <option value="">— Все дисциплины —</option>
+                    @foreach (var s in (List<TeacherWorkplace.Models.Subject>)ViewBag.Subjects)
+                    {
+                        <option value="@s.Id" selected="@(Context.Request.Query["subjectId"] == s.Id.ToString())">@s.Name</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-outline-primary w-100"><i class="fas fa-filter me-1"></i>Применить</button>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="card">
+    <div class="card-header"><i class="fas fa-list me-2"></i>Оценки — <strong>@Model.Count()</strong></div>
+    <div class="card-body p-0">
+        @if (!Model.Any())
+        {
+            <div class="text-center py-5 text-muted">
+                <i class="fas fa-star fa-3x mb-3 d-block opacity-25"></i>
+                <h5>Оценок не найдено</h5>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead class="table-light">
+                        <tr><th>Студент</th><th>Дисциплина</th><th class="text-center">Оценка</th><th>Тип</th><th>Дата</th><th>Описание</th><th style="width:90px"></th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var g in Model)
+                        {
+                            <tr>
+                                <td class="fw-semibold">@g.Student?.FullName</td>
+                                <td>@g.Subject?.Name</td>
+                                <td class="text-center">
+                                    <span class="badge fs-6 @(g.Score==5?"bg-success":g.Score==4?"bg-primary":g.Score==3?"bg-warning text-dark":"bg-danger")">@g.Score</span>
+                                </td>
+                                <td><span class="badge bg-secondary">@g.Type</span></td>
+                                <td>@g.Date.ToString("dd.MM.yyyy")</td>
+                                <td class="text-muted small">@(g.Description ?? "—")</td>
+                                <td>
+                                    <a asp-action="Edit" asp-route-id="@g.Id" class="btn btn-sm btn-outline-warning me-1"><i class="fas fa-edit"></i></a>
+                                    <a asp-action="Delete" asp-route-id="@g.Id" class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>

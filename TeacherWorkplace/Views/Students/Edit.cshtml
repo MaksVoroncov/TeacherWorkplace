@@ -1,0 +1,62 @@
+@model TeacherWorkplace.Models.Student
+@{
+    ViewData["Title"] = "Редактировать студента";
+    var groupList = ViewData["GroupId"] as Microsoft.AspNetCore.Mvc.Rendering.SelectList;
+}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-user-edit me-2 text-warning"></i>Редактировать: @Model.FullName</h2>
+    <a asp-action="Index" class="btn btn-outline-secondary"><i class="fas fa-arrow-left me-1"></i>Назад</a>
+</div>
+<div class="card" style="max-width:700px">
+    <div class="card-body">
+        <form asp-action="Edit">
+            <input type="hidden" asp-for="Id" />
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label asp-for="LastName" class="form-label fw-semibold"></label>
+                    <input asp-for="LastName" class="form-control" />
+                    <span asp-validation-for="LastName" class="text-danger small"></span>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="FirstName" class="form-label fw-semibold"></label>
+                    <input asp-for="FirstName" class="form-control" />
+                    <span asp-validation-for="FirstName" class="text-danger small"></span>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="MiddleName" class="form-label fw-semibold"></label>
+                    <input asp-for="MiddleName" class="form-control" />
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="BirthDate" class="form-label fw-semibold"></label>
+                    <input asp-for="BirthDate" type="date" class="form-control" />
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="GroupId" class="form-label fw-semibold">Группа</label>
+                    <select asp-for="GroupId" asp-items="groupList" class="form-select"></select>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="EnrollmentDate" class="form-label fw-semibold"></label>
+                    <input asp-for="EnrollmentDate" type="date" class="form-control" />
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Phone" class="form-label fw-semibold"></label>
+                    <input asp-for="Phone" class="form-control" />
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Email" class="form-label fw-semibold"></label>
+                    <input asp-for="Email" class="form-control" />
+                </div>
+                <div class="col-12">
+                    <label asp-for="Notes" class="form-label fw-semibold"></label>
+                    <textarea asp-for="Notes" class="form-control" rows="2"></textarea>
+                </div>
+            </div>
+            <div class="mt-4">
+                <button type="submit" class="btn btn-warning"><i class="fas fa-save me-1"></i>Сохранить</button>
+                <a asp-action="Index" class="btn btn-outline-secondary ms-2">Отмена</a>
+            </div>
+        </form>
+    </div>
+</div>
+@section Scripts { @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); } }

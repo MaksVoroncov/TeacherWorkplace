@@ -1,0 +1,29 @@
+@model IEnumerable<TeacherWorkplace.Models.Group>
+@{ ViewData["Title"] = "Группы"; }
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-users me-2 text-success"></i>Учебные группы</h2>
+    <a asp-action="Create" class="btn btn-primary"><i class="fas fa-plus me-1"></i>Добавить группу</a>
+</div>
+<div class="row g-3">
+    @foreach (var g in Model)
+    {
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span class="fw-bold fs-5">@g.Name</span>
+                    <span class="badge bg-primary">@g.Course курс</span>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-2"><i class="fas fa-graduation-cap me-1"></i>@g.Specialty</p>
+                    <p class="mb-2"><i class="fas fa-users me-1"></i>Студентов: <strong>@g.StudentsCount</strong></p>
+                    <p class="mb-0 text-muted small">Год поступления: @g.EnrollmentYear</p>
+                </div>
+                <div class="card-footer bg-transparent">
+                    <a asp-action="Details" asp-route-id="@g.Id" class="btn btn-sm btn-outline-info me-1"><i class="fas fa-eye"></i></a>
+                    <a asp-action="Edit" asp-route-id="@g.Id" class="btn btn-sm btn-outline-warning me-1"><i class="fas fa-edit"></i></a>
+                    <a asp-action="Delete" asp-route-id="@g.Id" class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></a>
+                </div>
+            </div>
+        </div>
+    }
+</div>

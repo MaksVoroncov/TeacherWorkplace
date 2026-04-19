@@ -1,0 +1,48 @@
+@model TeacherWorkplace.Models.Assignment
+@{
+    ViewData["Title"] = "Создать задание";
+    var subjectList = ViewData["SubjectId"] as Microsoft.AspNetCore.Mvc.Rendering.SelectList;
+}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-plus me-2 text-info"></i>Создать задание</h2>
+    <a asp-action="Index" class="btn btn-outline-secondary"><i class="fas fa-arrow-left me-1"></i>Назад</a>
+</div>
+<div class="card" style="max-width:600px">
+    <div class="card-body">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+            <div class="mb-3">
+                <label asp-for="Title" class="form-label fw-semibold">Название задания</label>
+                <input asp-for="Title" class="form-control" placeholder="Например: Лабораторная работа №1" />
+                <span asp-validation-for="Title" class="text-danger small"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="SubjectId" class="form-label fw-semibold">Дисциплина</label>
+                <select asp-for="SubjectId" asp-items="subjectList" class="form-select">
+                    <option value="">— Выберите дисциплину —</option>
+                </select>
+                <span asp-validation-for="SubjectId" class="text-danger small"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Description" class="form-label fw-semibold">Описание</label>
+                <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+                <span asp-validation-for="Description" class="text-danger small"></span>
+            </div>
+            <div class="row g-3 mb-3">
+                <div class="col-md-7">
+                    <label asp-for="Deadline" class="form-label fw-semibold">Дедлайн</label>
+                    <input asp-for="Deadline" type="datetime-local" class="form-control" />
+                    <span asp-validation-for="Deadline" class="text-danger small"></span>
+                </div>
+                <div class="col-md-5">
+                    <label asp-for="MaxScore" class="form-label fw-semibold">Максимальный балл</label>
+                    <input asp-for="MaxScore" type="number" class="form-control" min="1" max="100" value="100" />
+                    <span asp-validation-for="MaxScore" class="text-danger small"></span>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i>Создать</button>
+            <a asp-action="Index" class="btn btn-outline-secondary ms-2">Отмена</a>
+        </form>
+    </div>
+</div>
+@section Scripts { @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); } }

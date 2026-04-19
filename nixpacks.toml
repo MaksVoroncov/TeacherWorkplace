@@ -1,0 +1,8 @@
+[phases.install]
+cmds = ["dotnet restore TeacherWorkplace/TeacherWorkplace.csproj"]
+
+[phases.build]
+cmds = ["dotnet publish TeacherWorkplace/TeacherWorkplace.csproj -c Release -o /app/publish"]
+
+[start]
+cmd = "dotnet /app/publish/TeacherWorkplace.dll"
