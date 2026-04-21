@@ -8,7 +8,7 @@ RUN dotnet publish TeacherWorkplace/TeacherWorkplace.csproj -c Release -o /app/p
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 WORKDIR /app
 COPY --from=build /app/publish .
-ENV ASPNETCORE_URLS=http://+:${PORT:-8080}
-ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
+ENV ASPNETCORE_URLS=http://+:8080
+ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=0
 EXPOSE 8080
 ENTRYPOINT ["dotnet", "TeacherWorkplace.dll"]
