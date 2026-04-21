@@ -17,7 +17,6 @@ namespace TeacherWorkplace.Controllers
         [HttpGet]
         public IActionResult Login()
         {
-            // Если уже авторизован, перенаправить на главную
             if (HttpContext.Session.GetInt32("UserId").HasValue)
             {
                 return RedirectToAction("Index", "Home");
@@ -44,41 +43,47 @@ namespace TeacherWorkplace.Controllers
                 return View();
             }
 
-            // Сохранение данных в сессию
             HttpContext.Session.SetInt32("UserId", user.Id);
             HttpContext.Session.SetString("UserName", user.FullName);
             HttpContext.Session.SetString("UserRole", user.Role);
 
-            // Обновление времени последнего входа
-            user.LastLogin = DateTime.Now;
+            user.LastLogin = DateTime.UtcNow;
             await _context.SaveChangesAsync();
 
-            // Логирование входа
-            _context.LogEntries.Add(new LogEntry
+            try
             {
-                UserId = user.Id,
-                Action = "Вход в систему",
-                IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString()
-            });
-            await _context.SaveChangesAsync();
+                _context.LogEntries.Add(new LogEntry
+                {
+                    UserId = user.Id,
+                    Action = "Вход в систему",
+                    IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+                    Timestamp = DateTime.UtcNow
+                });
+                await _context.SaveChangesAsync();
+            }
+            catch { /* игнорируем ошибку логирования */ }
 
             return RedirectToAction("Index", "Home");
         }
 
-        public IActionResult Logout()
+        public async Task<IActionResult> Logout()
         {
             var userId = HttpContext.Session.GetInt32("UserId");
-            
+
             if (userId.HasValue)
             {
-                // Логирование выхода
-                _context.LogEntries.Add(new LogEntry
+                try
                 {
-                    UserId = userId.Value,
-                    Action = "Выход из системы",
-                    IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString()
-                });
-                _context.SaveChanges();
+                    _context.LogEntries.Add(new LogEntry
+                    {
+                        UserId = userId.Value,
+                        Action = "Выход из системы",
+                        IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+                        Timestamp = DateTime.UtcNow
+                    });
+                    await _context.SaveChangesAsync();
+                }
+                catch { /* игнорируем ошибку логирования */ }
             }
 
             HttpContext.Session.Clear();
