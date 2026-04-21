@@ -1,6 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using TeacherWorkplace.Data;
 
+// Фикс DateTime для PostgreSQL
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
 Console.OutputEncoding = System.Text.Encoding.UTF8;
 
 var builder = WebApplication.CreateBuilder(args);
